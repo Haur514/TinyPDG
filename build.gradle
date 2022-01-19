@@ -15,9 +15,7 @@ compileTestJava.options.encoding = 'UTF-8'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -32,13 +30,13 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
-    compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
+    implementation group: 'commons-cli', name: 'commons-cli', version: '1.2'
     
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.6'
+    implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.6'
     
     // https://mvnrepository.com/artifact/org.eclipse.jdt/org.eclipse.jdt.core
-    compile group: 'org.eclipse.jdt', name: 'org.eclipse.jdt.core', version: '3.10.0'
+    implementation group: 'org.eclipse.jdt', name: 'org.eclipse.jdt.core', version: '3.10.0'
     
 }
 

@@ -76,31 +76,33 @@ public class Writer {
 			}
 
 			{
-				final Option p = new Option("e", "EdgeInfo",
+				final Option e = new Option("e", "EdgeInfo",
 						true, "thoroughly edge information");
-				p.setArgName("file");
-				p.setArgs(1);
-				p.setRequired(false);
-				options.addOption(p);
+				e.setArgName("file");
+				e.setArgs(1);
+				e.setRequired(false);
+				options.addOption(e);
 			}
-			
-			// {
-			// final Option o = new Option("o", "optimize", true,
-			// "remove unnecessary nodes from CFGs and PDGs");
-			// o.setArgName("boolean");
-			// o.setArgs(1);
-			// o.setRequired(false);
-			// options.addOption(o);
-			// }
 
-			// {
-			// final Option a = new Option("a", "atomic", true,
-			// "dissolve complicated statements into simple statements");
-			// a.setArgName("boolean");
-			// a.setArgs(1);
-			// a.setRequired(false);
-			// options.addOption(a);
-			// }
+			// This option is effective only in -e option.
+			{
+				final Option t = new Option("t", "TargetMethod",
+						true, "Specify target method.");
+				t.setArgName("method");
+				t.setArgs(1);
+				t.setRequired(false);
+				options.addOption(t);
+			}
+
+			// This option is effective only with -e and -t
+			{
+				final Option l = new Option("l", "LineNumber",
+						true, "Specify Line Number.");
+				l.setArgName("line");
+				l.setArgs(1);
+				l.setRequired(false);
+				options.addOption(l);
+			}
 
 			final CommandLineParser parser = new PosixParser();
 			final CommandLine cmd = parser.parse(options, args);
@@ -156,6 +158,7 @@ public class Writer {
 				writer.newLine();
 
 				int createdGraphNumber = 0;
+
 				for (final MethodInfo method : methods) {
 
 					final PDG pdg = new PDG(method, new PDGNodeFactory(),
@@ -169,7 +172,7 @@ public class Writer {
 				writer.close();
 			}
 
-			if (cmd.hasOption("e")){
+			if (cmd.hasOption("e")) {
 				System.out.println("building and outputing EdgeInfo ...");
 				final BufferedWriter writer = new BufferedWriter(
 						new FileWriter(cmd.getOptionValue("e")));
@@ -178,12 +181,46 @@ public class Writer {
 				writer.newLine();
 
 				int createdGraphNumber = 0;
-				for (final MethodInfo method : methods) {
 
-					final PDG pdg = new PDG(method, new PDGNodeFactory(),
-							new CFGNodeFactory(), true, true, false);
-					pdg.build();
-					writePDGEdgeInfo(pdg, createdGraphNumber++, writer);
+				if (cmd.hasOption("t")) {
+					// TODO
+					// not good code very much
+					List<MethodInfo> targetMethods = methods.stream().filter((method) -> {
+						return method.name.equals(cmd.getOptionValue("t"));
+					}).collect(Collectors.toList());
+
+					if (targetMethods.isEmpty()) {
+						System.out.println("ERROR: No such method " + cmd.getOptionValue("t"));
+						writer.write("-1,-1,-1,-1,-1");
+						writer.close();
+						return;
+					}
+
+					// オーバーライドの可能性を考慮し，同じ名前を持つ関数が複数存在する可能性があるためfor文で対応している．
+
+					if (cmd.hasOption("l")) {
+						for (final MethodInfo method : targetMethods) {
+							int lineNumber = Integer.parseInt(cmd.getOptionValue("l"));
+							final PDG pdg = new PDG(method, new PDGNodeFactory(),
+									new CFGNodeFactory(), true, true, false);
+							pdg.build();
+							writePDGEdgeInfo(pdg, createdGraphNumber++, writer, lineNumber);
+						}
+					} else {
+						for (final MethodInfo method : targetMethods) {
+							final PDG pdg = new PDG(method, new PDGNodeFactory(),
+									new CFGNodeFactory(), true, true, false);
+							pdg.build();
+							writePDGEdgeInfo(pdg, createdGraphNumber++, writer);
+						}
+					}
+				} else {
+					for (final MethodInfo method : methods) {
+						final PDG pdg = new PDG(method, new PDGNodeFactory(),
+								new CFGNodeFactory(), true, true, false);
+						pdg.build();
+						writePDGEdgeInfo(pdg, createdGraphNumber++, writer);
+					}
 				}
 
 				writer.close();
@@ -317,27 +354,45 @@ public class Writer {
 			writer.newLine();
 		}
 
-		// for (final PDGEdge edge : pdg.getAllEdges()) {
-		// 	writer.write(Integer.toString(createdGraphNumber));
-		// 	writer.write(".");
-		// 	writer.write(Integer.toString(nodeLabels.get(edge.fromNode)));
-		// 	writer.write(" -> ");
-		// 	writer.write(Integer.toString(createdGraphNumber));
-		// 	writer.write(".");
-		// 	writer.write(Integer.toString(nodeLabels.get(edge.toNode)));
-		// 	if (edge instanceof PDGDataDependenceEdge) {
-		// 		writer.write(" [style = solid, label=\""
-		// 				+ edge.getDependenceString() + "\"]");
-		// 	} else if (edge instanceof PDGControlDependenceEdge) {
-		// 		writer.write(" [style = dotted, label=\""
-		// 				+ edge.getDependenceString() + "\"]");
-		// 	} else if (edge instanceof PDGExecutionDependenceEdge) {
-		// 		writer.write(" [style = bold, label=\""
-		// 				+ edge.getDependenceString() + "\"]");
-		// 	}
-		// 	writer.write(";");
-		// 	writer.newLine();
-		// }
+		writer.newLine();
+	}
+
+	static private void writePDGEdgeInfo(final PDG pdg, final int createdGraphNumber, final BufferedWriter writer,
+			final int lineNumber)
+			throws IOException {
+		final MethodInfo method = pdg.unit;
+		final Map<PDGNode<?>, Integer> nodeLabels = new HashMap<PDGNode<?>, Integer>();
+		for (final PDGNode<?> node : pdg.getAllNodes()) {
+			// omit Enter node;
+			if(node.core.getText().equals("Enter")){
+				continue;
+			}
+			if(lineNumber < node.core.startLine || node.core.endLine < lineNumber){
+				continue;
+			}
+			nodeLabels.put(node, nodeLabels.size());
+			writer.write("\"");
+			writer.write(node.getText());
+			writer.write("\"");
+			writer.write(",");
+			writer.write(Integer.toString(node.getBackwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGDataDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.write(",");
+			writer.write(Integer.toString(node.getForwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGDataDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.write(",");
+			writer.write(Integer.toString(node.getBackwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGControlDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.write(",");
+			writer.write(Integer.toString(node.getForwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGControlDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.newLine();
+		}
+
 		writer.newLine();
 	}
 

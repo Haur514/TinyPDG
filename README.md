@@ -16,7 +16,8 @@ dot -Tpdf pdg.dot -o pdg.pdf
 ```
 
 ## Out put edge info
-追加したオプション
+追加したオプション`-e`, `-t`, `-l`
+各ノードに着目し，データ/コントロール依存エッジの入力/出力数を出力する．
 
 ```
 ./gradlew run --args="-d path/to/srcfile -e path2outputfile"
@@ -29,4 +30,13 @@ dot -Tpdf pdg.dot -o pdg.pdf
 4. コントロール依存エッジの出力数
 を指定したファイルに出力する．
 
-データ形式は`csv`
+`-t`は特定のメソッドを指定できる． `-e`と共に利用できる．
+
+`-l`は特定のラインを指定できる．`-e`, `-t`とのみ利用できる．
+
+出力されるデータ形式は`csv`
+
+## Out put graphviz
+```
+dot -T png ${pdg}.dot -o ${pdg}.png
+```

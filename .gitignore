@@ -69,7 +69,8 @@ gradle-app.setting
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -323,3 +324,4 @@ local.properties
 
 # End of https://www.gitignore.io/api/eclipse
 
+/out/*

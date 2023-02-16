@@ -12,6 +12,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -74,6 +75,15 @@ public class Writer {
 				options.addOption(p);
 			}
 
+			{
+				final Option p = new Option("e", "EdgeInfo",
+						true, "thoroughly edge information");
+				p.setArgName("file");
+				p.setArgs(1);
+				p.setRequired(false);
+				options.addOption(p);
+			}
+			
 			// {
 			// final Option o = new Option("o", "optimize", true,
 			// "remove unnecessary nodes from CFGs and PDGs");
@@ -155,6 +165,26 @@ public class Writer {
 				}
 
 				writer.write("}");
+
+				writer.close();
+			}
+
+			if (cmd.hasOption("e")){
+				System.out.println("building and outputing EdgeInfo ...");
+				final BufferedWriter writer = new BufferedWriter(
+						new FileWriter(cmd.getOptionValue("e")));
+
+				writer.write("node,pdg-in-edge,pdg-out-edge,cfg-in-edge,cfg-out-edge");
+				writer.newLine();
+
+				int createdGraphNumber = 0;
+				for (final MethodInfo method : methods) {
+
+					final PDG pdg = new PDG(method, new PDGNodeFactory(),
+							new CFGNodeFactory(), true, true, false);
+					pdg.build();
+					writePDGEdgeInfo(pdg, createdGraphNumber++, writer);
+				}
 
 				writer.close();
 			}
@@ -259,6 +289,58 @@ public class Writer {
 		}
 	}
 
+	static private void writePDGEdgeInfo(final PDG pdg, final int createdGraphNumber, final BufferedWriter writer)
+			throws IOException {
+		final MethodInfo method = pdg.unit;
+		final Map<PDGNode<?>, Integer> nodeLabels = new HashMap<PDGNode<?>, Integer>();
+		for (final PDGNode<?> node : pdg.getAllNodes()) {
+			nodeLabels.put(node, nodeLabels.size());
+			writer.write("\"");
+			writer.write(node.getText());
+			writer.write("\"");
+			writer.write(",");
+			writer.write(Integer.toString(node.getBackwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGDataDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.write(",");
+			writer.write(Integer.toString(node.getForwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGDataDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.write(",");
+			writer.write(Integer.toString(node.getBackwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGControlDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.write(",");
+			writer.write(Integer.toString(node.getForwardEdges().stream().filter((edge) -> {
+				return edge instanceof PDGControlDependenceEdge;
+			}).collect(Collectors.toList()).size()));
+			writer.newLine();
+		}
+
+		// for (final PDGEdge edge : pdg.getAllEdges()) {
+		// 	writer.write(Integer.toString(createdGraphNumber));
+		// 	writer.write(".");
+		// 	writer.write(Integer.toString(nodeLabels.get(edge.fromNode)));
+		// 	writer.write(" -> ");
+		// 	writer.write(Integer.toString(createdGraphNumber));
+		// 	writer.write(".");
+		// 	writer.write(Integer.toString(nodeLabels.get(edge.toNode)));
+		// 	if (edge instanceof PDGDataDependenceEdge) {
+		// 		writer.write(" [style = solid, label=\""
+		// 				+ edge.getDependenceString() + "\"]");
+		// 	} else if (edge instanceof PDGControlDependenceEdge) {
+		// 		writer.write(" [style = dotted, label=\""
+		// 				+ edge.getDependenceString() + "\"]");
+		// 	} else if (edge instanceof PDGExecutionDependenceEdge) {
+		// 		writer.write(" [style = bold, label=\""
+		// 				+ edge.getDependenceString() + "\"]");
+		// 	}
+		// 	writer.write(";");
+		// 	writer.newLine();
+		// }
+		writer.newLine();
+	}
+
 	static private void writePDG(final PDG pdg, final int createdGraphNumber,
 			final BufferedWriter writer) throws IOException {
 
@@ -311,6 +393,7 @@ public class Writer {
 			writer.newLine();
 		}
 
+		// pdgのエッジはここで処理されている
 		for (final PDGEdge edge : pdg.getAllEdges()) {
 			writer.write(Integer.toString(createdGraphNumber));
 			writer.write(".");

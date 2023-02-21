@@ -1,0 +1,31 @@
+digraph {
+subgraph cluster0 {
+label = "method <5...13>";
+0.4 [style = filled, label = "int c = a.num; <10>", fillcolor = white, shape = ellipse];
+0.7 [style = filled, label = "Enter <5...13>", fillcolor = aquamarine, shape = diamond];
+0.1 [style = filled, label = "a == null <6>", fillcolor = white, shape = diamond];
+0.6 [style = filled, label = "return d; <12>", fillcolor = deeppink, shape = ellipse];
+0.3 [style = filled, label = "int b = a.num; <9>", fillcolor = white, shape = ellipse];
+0.0 [style = filled, label = "A a <5>", fillcolor = tomato, shape = box];
+0.5 [style = filled, label = "int d = b + c; <11>", fillcolor = white, shape = ellipse];
+0.2 [style = filled, label = "throw NullPointerException; <7>", fillcolor = white, shape = ellipse];
+0.0 -> 0.1 [style = solid, label="a"];
+0.1 -> 0.2 [style = dotted, label="true"];
+0.1 -> 0.2 [style = bold, label=""];
+0.1 -> 0.3 [style = bold, label=""];
+0.2 -> 0.3 [style = bold, label=""];
+0.3 -> 0.4 [style = bold, label=""];
+0.3 -> 0.5 [style = solid, label="b"];
+0.4 -> 0.5 [style = solid, label="c"];
+0.4 -> 0.5 [style = bold, label=""];
+0.5 -> 0.6 [style = solid, label="d"];
+0.5 -> 0.6 [style = bold, label=""];
+0.7 -> 0.0 [style = dotted, label="true"];
+0.7 -> 0.1 [style = dotted, label="true"];
+0.7 -> 0.1 [style = bold, label=""];
+0.7 -> 0.3 [style = dotted, label="true"];
+0.7 -> 0.4 [style = dotted, label="true"];
+0.7 -> 0.5 [style = dotted, label="true"];
+0.7 -> 0.6 [style = dotted, label="true"];
+}
+}

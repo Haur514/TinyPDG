@@ -1,0 +1,1 @@
+./../gradlew run --args="-d ./../src/test/java/test001 -p ./../out/pdg.dot -c ./../out/cfg.dot"

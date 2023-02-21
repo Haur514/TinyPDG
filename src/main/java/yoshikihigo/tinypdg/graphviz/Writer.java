@@ -215,11 +215,21 @@ public class Writer {
 						}
 					}
 				} else {
-					for (final MethodInfo method : methods) {
-						final PDG pdg = new PDG(method, new PDGNodeFactory(),
-								new CFGNodeFactory(), true, true, false);
-						pdg.build();
-						writePDGEdgeInfo(pdg, createdGraphNumber++, writer);
+					if (cmd.hasOption("l")) {
+						for (final MethodInfo method : methods) {
+							int lineNumber = Integer.parseInt(cmd.getOptionValue("l"));
+							final PDG pdg = new PDG(method, new PDGNodeFactory(),
+									new CFGNodeFactory(), true, true, false);
+							pdg.build();
+							writePDGEdgeInfo(pdg, createdGraphNumber++, writer, lineNumber);
+						}
+					} else {
+						for (final MethodInfo method : methods) {
+							final PDG pdg = new PDG(method, new PDGNodeFactory(),
+									new CFGNodeFactory(), true, true, false);
+							pdg.build();
+							writePDGEdgeInfo(pdg, createdGraphNumber++, writer);
+						}
 					}
 				}
 

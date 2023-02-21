@@ -2,20 +2,17 @@ package test001;
 
 public class Test001 {
 
-	int method() {
-		int a = 10;
-		int b = 20;
-		int c = a + b;
-		if(a 
-		<
-		 -
-		 1000
-		 ){
-			c += 1;
+	int method(A a) {
+		if(a == null){
+			throw NullPointerException;
 		}
-		for(int i = a; i < b;i++){
-			c += a;
-		}
-		return c;
-	}
+		int b = a.num;
+		int c = a.num;
+		int d = b + c;
+		return d;
+	}	
+}
+
+class A{
+	int num;
 }
